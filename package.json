@@ -1,7 +1,7 @@
 {
   "name": "@palmyra-demo/workflow",
   "version": "0.1.0",
-  "description": "React workflow (BPMN-style) editor with versioning, built on diagram-js",
+  "description": "React workflow (BPMN-style) editor with versioning built on diagram-js",
   "type": "module",
   "main": "./dist/workflow-editor.cjs",
   "module": "./dist/workflow-editor.js",
