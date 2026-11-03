@@ -30,8 +30,7 @@ export type BpmnShapeType =
   | 'bpmn:DataStoreReference'
   | 'bpmn:Pool'
   | 'bpmn:Lane'
-  | 'bpmn:Participant'
-  | 'bpmn:TimerEvent'
+  | 'bpmn:Participant';
 
 export interface PaletteShapeConfig {
   id: string;
@@ -80,7 +79,7 @@ export const sizeFor = (type: string): { width: number; height: number } => {
   if (type.includes('Gateway')) return { width: 50, height: 50 };
   if (type === 'bpmn:DataObjectReference') return { width: 36, height: 50 };
   if (type === 'bpmn:DataStoreReference') return { width: 50, height: 50 };
-  if (type === 'bpmn:SubProcess') return { width: 350, height: 200 }; // created expanded, like bpmn.io
+  if (type === 'bpmn:SubProcess') return { width: 350, height: 200 };
   if (type === 'bpmn:Pool' || type === 'bpmn:Participant' || type === 'bpmn:Lane') {
     return { width: 400, height: 200 };
   }
@@ -125,7 +124,12 @@ export const paletteConfig: PaletteGroup[] = [
       event('create-end-event-message', 'bpmn:EndEvent:Message', 'Message End Event', 'message'),
       event('create-intermediate-catch', 'bpmn:IntermediateCatchEvent', 'Intermediate Catch Event'),
       event('create-intermediate-timer', 'bpmn:IntermediateCatchEvent:Timer', 'Timer Catch Event', 'timer'),
-      event('create-intermediate-message', 'bpmn:IntermediateCatchEvent:Message', 'Message Catch Event', 'message'),
+      event(
+        'create-intermediate-message',
+        'bpmn:IntermediateCatchEvent:Message',
+        'Message Catch Event',
+        'message',
+      ),
       event('create-intermediate-throw', 'bpmn:IntermediateThrowEvent', 'Intermediate Throw Event', 'throw'),
       event('create-boundary-event', 'bpmn:BoundaryEvent', 'Boundary Event'),
     ],
@@ -151,28 +155,93 @@ export const paletteConfig: PaletteGroup[] = [
     group: 'gateways',
     label: 'Gateways',
     shapes: [
-      { id: 'create-exclusive-gateway', type: 'bpmn:ExclusiveGateway', title: 'Exclusive Gateway (XOR)', className: 'bpmn-icon-gateway-xor', ...sizeFor('bpmn:ExclusiveGateway'), gatewaySymbol: 'x' },
-      { id: 'create-parallel-gateway', type: 'bpmn:ParallelGateway', title: 'Parallel Gateway', className: 'bpmn-icon-gateway-parallel', ...sizeFor('bpmn:ParallelGateway'), gatewaySymbol: 'plus' },
-      { id: 'create-inclusive-gateway', type: 'bpmn:InclusiveGateway', title: 'Inclusive Gateway (OR)', className: 'bpmn-icon-gateway-or', ...sizeFor('bpmn:InclusiveGateway'), gatewaySymbol: 'circle' },
-      { id: 'create-event-gateway', type: 'bpmn:EventBasedGateway', title: 'Event-based Gateway', className: 'bpmn-icon-gateway-eventbased', ...sizeFor('bpmn:EventBasedGateway'), gatewaySymbol: 'pentagon' },
-      { id: 'create-complex-gateway', type: 'bpmn:ComplexGateway', title: 'Complex Gateway', className: 'bpmn-icon-gateway-complex', ...sizeFor('bpmn:ComplexGateway'), gatewaySymbol: 'asterisk' },
+      {
+        id: 'create-exclusive-gateway',
+        type: 'bpmn:ExclusiveGateway',
+        title: 'Exclusive Gateway (XOR)',
+        className: 'bpmn-icon-gateway-xor',
+        ...sizeFor('bpmn:ExclusiveGateway'),
+        gatewaySymbol: 'x',
+      },
+      {
+        id: 'create-parallel-gateway',
+        type: 'bpmn:ParallelGateway',
+        title: 'Parallel Gateway',
+        className: 'bpmn-icon-gateway-parallel',
+        ...sizeFor('bpmn:ParallelGateway'),
+        gatewaySymbol: 'plus',
+      },
+      {
+        id: 'create-inclusive-gateway',
+        type: 'bpmn:InclusiveGateway',
+        title: 'Inclusive Gateway (OR)',
+        className: 'bpmn-icon-gateway-or',
+        ...sizeFor('bpmn:InclusiveGateway'),
+        gatewaySymbol: 'circle',
+      },
+      {
+        id: 'create-event-gateway',
+        type: 'bpmn:EventBasedGateway',
+        title: 'Event-based Gateway',
+        className: 'bpmn-icon-gateway-eventbased',
+        ...sizeFor('bpmn:EventBasedGateway'),
+        gatewaySymbol: 'pentagon',
+      },
+      {
+        id: 'create-complex-gateway',
+        type: 'bpmn:ComplexGateway',
+        title: 'Complex Gateway',
+        className: 'bpmn-icon-gateway-complex',
+        ...sizeFor('bpmn:ComplexGateway'),
+        gatewaySymbol: 'asterisk',
+      },
     ],
   },
   {
     group: 'data',
     label: 'Data',
     shapes: [
-      { id: 'create-data-object', type: 'bpmn:DataObjectReference', title: 'Data Object', className: 'bpmn-icon-data-object', ...sizeFor('bpmn:DataObjectReference') },
-      { id: 'create-data-store', type: 'bpmn:DataStoreReference', title: 'Data Store', className: 'bpmn-icon-data-store', ...sizeFor('bpmn:DataStoreReference') },
+      {
+        id: 'create-data-object',
+        type: 'bpmn:DataObjectReference',
+        title: 'Data Object',
+        className: 'bpmn-icon-data-object',
+        ...sizeFor('bpmn:DataObjectReference'),
+      },
+      {
+        id: 'create-data-store',
+        type: 'bpmn:DataStoreReference',
+        title: 'Data Store',
+        className: 'bpmn-icon-data-store',
+        ...sizeFor('bpmn:DataStoreReference'),
+      },
     ],
   },
   {
     group: 'containers',
     label: 'Containers',
     shapes: [
-      { id: 'create-pool', type: 'bpmn:Pool', title: 'Pool', className: 'bpmn-icon-pool', ...sizeFor('bpmn:Pool') },
-      { id: 'create-participant', type: 'bpmn:Participant', title: 'Participant', className: 'bpmn-icon-participant', ...sizeFor('bpmn:Participant') },
-      { id: 'create-lane', type: 'bpmn:Lane', title: 'Lane', className: 'bpmn-icon-lane', ...sizeFor('bpmn:Lane') },
+      {
+        id: 'create-pool',
+        type: 'bpmn:Pool',
+        title: 'Pool',
+        className: 'bpmn-icon-pool',
+        ...sizeFor('bpmn:Pool'),
+      },
+      {
+        id: 'create-participant',
+        type: 'bpmn:Participant',
+        title: 'Participant',
+        className: 'bpmn-icon-participant',
+        ...sizeFor('bpmn:Participant'),
+      },
+      {
+        id: 'create-lane',
+        type: 'bpmn:Lane',
+        title: 'Lane',
+        className: 'bpmn-icon-lane',
+        ...sizeFor('bpmn:Lane'),
+      },
     ],
   },
 ];

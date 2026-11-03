@@ -7,8 +7,18 @@ type Handler = (event: any, element: any, autoActivate?: boolean) => void;
 
 export default class CustomContextPadProvider {
   static $inject = [
-    'contextPad', 'modeling', 'elementFactory', 'connect', 'create', 'autoPlace', 'customAutoPlace',
-    'popupMenu', 'canvas', 'rules', 'selection', 'eventBus',
+    'contextPad',
+    'modeling',
+    'elementFactory',
+    'connect',
+    'create',
+    'autoPlace',
+    'customAutoPlace',
+    'popupMenu',
+    'canvas',
+    'rules',
+    'selection',
+    'eventBus',
   ];
 
   constructor(
@@ -34,14 +44,33 @@ export default class CustomContextPadProvider {
     const type = element.type as WorkflowType;
     const category = categoryOf(type);
 
-    const entry = (id: string, group: string, title: string, icon: string, action: { click?: Handler; dragstart?: Handler }) => {
-      actions[id] = { group, title, html: `<div class="entry" draggable="true" title="${title}">${icon}</div>`, action };
+    const entry = (
+      id: string,
+      group: string,
+      title: string,
+      icon: string,
+      action: { click?: Handler; dragstart?: Handler },
+    ) => {
+      actions[id] = {
+        group,
+        title,
+        html: `<div class="entry" draggable="true" title="${title}">${icon}</div>`,
+        action,
+      };
     };
-    const del = () => entry('delete', 'edit', 'Remove', ICONS.trash, { click: () => this.modeling.removeElements([element]) });
-    // entry('create-more-elements', 'edit', 'Create element', '<svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="1.7"/><circle cx="12" cy="12" r="1.7"/><circle cx="19" cy="12" r="1.7"/></svg>', { click: (event: any) => { event?.preventDefault?.(); event?.stopPropagation?.(); const anchor = (event?.target as HTMLElement | null)?.closest?.('.entry') as HTMLElement | null; window.dispatchEvent(new CustomEvent('workflow:open-element-browser', { detail: { anchor } })); } });
+    const del = () =>
+      entry('delete', 'edit', 'Remove', ICONS.trash, {
+        click: () => this.modeling.removeElements([element]),
+      });
 
-    if (element.waypoints || isConnectionType(type)) { del(); return actions; }
-    if (type === 'workflow:group') { del(); return actions; }
+    if (element.waypoints || isConnectionType(type)) {
+      del();
+      return actions;
+    }
+    if (type === 'workflow:group') {
+      del();
+      return actions;
+    }
 
     if (isLane(element)) {
       this.laneEntries(element, entry);
@@ -63,18 +92,39 @@ export default class CustomContextPadProvider {
       return actions;
     }
 
-    // flow nodes and data
     if (category === 'event' || category === 'task' || category === 'gateway') {
-      this.appendEntry(element, entry, 'workflow:endEvent', 'append.end-event', 'Append end event', ICONS.endEvent);
-      this.appendEntry(element, entry, 'workflow:exclusiveGateway', 'append.gateway', 'Append gateway', ICONS.gateway);
+      this.appendEntry(
+        element,
+        entry,
+        'workflow:endEvent',
+        'append.end-event',
+        'Append end event',
+        ICONS.endEvent,
+      );
+      this.appendEntry(
+        element,
+        entry,
+        'workflow:exclusiveGateway',
+        'append.gateway',
+        'Append gateway',
+        ICONS.gateway,
+      );
       this.appendEntry(element, entry, 'workflow:task', 'append.append-task', 'Append task', ICONS.task);
-      this.appendEntry(element, entry, 'workflow:intermediateEvent', 'append.intermediate-event', 'Append intermediate/boundary event', ICONS.intermediateEvent);
+      this.appendEntry(
+        element,
+        entry,
+        'workflow:intermediateEvent',
+        'append.intermediate-event',
+        'Append intermediate/boundary event',
+        ICONS.intermediateEvent,
+      );
     }
     this.appendAnnotation(element, entry);
 
     if (replacementTypes(element).length || hasSubProcessVariants(element)) {
       entry('replace', 'edit', 'Change type', ICONS.wrench, {
-        click: (event: any) => this.popupMenu.open(element, 'workflow-replace', this.popupPosition(event, element)),
+        click: (event: any) =>
+          this.popupMenu.open(element, 'workflow-replace', this.popupPosition(event, element)),
       });
     }
 
@@ -89,7 +139,15 @@ export default class CustomContextPadProvider {
   }
 
   private appendAnnotation(element: any, entry: Function) {
-    this.appendEntry(element, entry, 'workflow:textAnnotation', 'append.text-annotation', 'Append text annotation', ICONS.textAnnotation, true);
+    this.appendEntry(
+      element,
+      entry,
+      'workflow:textAnnotation',
+      'append.text-annotation',
+      'Append text annotation',
+      ICONS.textAnnotation,
+      true,
+    );
   }
 
   private laneEntries(element: any, entry: Function) {
@@ -99,24 +157,50 @@ export default class CustomContextPadProvider {
     const canDivide = isLane(element) || lanes.length === 0;
 
     if (canDivide && element.height >= 2 * LANE_MIN_HEIGHT) {
-      entry('lane-divide-two', 'model', 'Divide into two lanes', ICONS.laneDivide2, { click: () => this.modeling.splitLane(element, 2) });
+      entry('lane-divide-two', 'model', 'Divide into two lanes', ICONS.laneDivide2, {
+        click: () => this.modeling.splitLane(element, 2),
+      });
     }
     if (canDivide && element.height >= 3 * LANE_MIN_HEIGHT) {
-      entry('lane-divide-three', 'model', 'Divide into three lanes', ICONS.laneDivide3, { click: () => this.modeling.splitLane(element, 3) });
+      entry('lane-divide-three', 'model', 'Divide into three lanes', ICONS.laneDivide3, {
+        click: () => this.modeling.splitLane(element, 3),
+      });
     }
-    if (first) entry('lane-insert-above', 'model', 'Add lane above', ICONS.laneAbove, { click: () => this.modeling.addLane(first, 'top') });
-    if (last) entry('lane-insert-below', 'model', 'Add lane below', ICONS.laneBelow, { click: () => this.modeling.addLane(last, 'bottom') });
+    if (first)
+      entry('lane-insert-above', 'model', 'Add lane above', ICONS.laneAbove, {
+        click: () => this.modeling.addLane(first, 'top'),
+      });
+    if (last)
+      entry('lane-insert-below', 'model', 'Add lane below', ICONS.laneBelow, {
+        click: () => this.modeling.addLane(last, 'bottom'),
+      });
   }
 
-  /** Only offered when the rules would allow the connection (e.g. nothing leaves an end event). */
   private canAppend(source: any, type: WorkflowType): boolean {
-    const probe = { type, parent: source.type === 'workflow:boundaryEvent' ? source.parent?.parent : source.parent, businessObject: {} };
+    const probe = {
+      type,
+      parent: source.type === 'workflow:boundaryEvent' ? source.parent?.parent : source.parent,
+      businessObject: {},
+    };
     if (!isWorkflowElement(probe)) return false;
     const result = this.rules.allowed('connection.create', { source, target: probe });
-    return !!result && (typeof result !== 'object' || result.type === 'workflow:sequenceFlow' || result.type === 'workflow:association');
+    return (
+      !!result &&
+      (typeof result !== 'object' ||
+        result.type === 'workflow:sequenceFlow' ||
+        result.type === 'workflow:association')
+    );
   }
 
-  private appendEntry(source: any, entry: Function, type: WorkflowType, id: string, title: string, icon: string, annotation = false) {
+  private appendEntry(
+    source: any,
+    entry: Function,
+    type: WorkflowType,
+    id: string,
+    title: string,
+    icon: string,
+    annotation = false,
+  ) {
     if (!annotation && !this.canAppend(source, type)) return;
     if (annotation && source.type === 'workflow:textAnnotation') return;
 
@@ -134,7 +218,7 @@ export default class CustomContextPadProvider {
       this.autoPlace.append(source, shape, hints);
       return;
     }
-    // boundary events live inside their host task: the new element belongs next to the host
+
     const target = source.parent?.parent || this.canvas.getRootElement();
     const position = this.placement.getPosition(source, shape);
     const created = this.modeling.appendShape(source, shape, position, target, hints);
@@ -142,7 +226,6 @@ export default class CustomContextPadProvider {
     this.eventBus.fire('autoPlace.end', { source, shape: created });
   }
 
-  /** Open the menu right below the clicked pad button (fixed, viewport coordinates). */
   private popupPosition(event: any, element: any) {
     const button = (event?.target as HTMLElement | null)?.closest?.('.entry') as HTMLElement | null;
     if (button) {

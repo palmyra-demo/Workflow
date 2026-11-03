@@ -4,15 +4,19 @@ import { COLLAPSED_SIZE, isCollapsedSub, isSubProcessLike } from './pool/poolUti
 
 export const REPLACE_MENU_ID = 'workflow-replace';
 
-/** start / intermediate / end – an event may only be replaced by events of the same kind */
 const eventRole = (type: string) => {
   const t = type.toLowerCase();
-  return t.includes('start') ? 'start' : t.includes('end') ? 'end' : t.includes('intermediate') || t.includes('link') ? 'intermediate' : t;
+  return t.includes('start')
+    ? 'start'
+    : t.includes('end')
+      ? 'end'
+      : t.includes('intermediate') || t.includes('link')
+        ? 'intermediate'
+        : t;
 };
 
 const CONTAINER_TASKS = new Set(['workflow:subProcess', 'workflow:adHocSubProcess', 'workflow:transaction']);
 
-/** the four sub-process flavours of bpmn.io's "Change element" menu */
 export const SUB_PROCESS_VARIANTS: Array<{ type: WorkflowType; expanded: boolean; label: string }> = [
   { type: 'workflow:subProcess', expanded: false, label: 'Sub-process (collapsed)' },
   { type: 'workflow:subProcess', expanded: true, label: 'Sub-process (expanded)' },
@@ -21,23 +25,24 @@ export const SUB_PROCESS_VARIANTS: Array<{ type: WorkflowType; expanded: boolean
 ];
 const VARIANT_TYPES = new Set<string>(['workflow:subProcess', 'workflow:adHocSubProcess']);
 
-/** tasks and sub-processes can become any sub-process variant */
-export const hasSubProcessVariants = (element: any): boolean => categoryOf(element.type as WorkflowType) === 'task' && element.type !== 'workflow:boundaryEvent';
+export const hasSubProcessVariants = (element: any): boolean =>
+  categoryOf(element.type as WorkflowType) === 'task' && element.type !== 'workflow:boundaryEvent';
 
-/** Types `element` can be turned into (same family, like bpmn.io's "Change element" menu). */
 export function replacementTypes(element: any): WorkflowType[] {
   const current = element.type as WorkflowType;
   const category = categoryOf(current);
   if (!['event', 'task', 'gateway', 'data'].includes(category)) return [];
   if (current === 'workflow:boundaryEvent') return [];
-  const hasContent = (element.children || []).some((c: any) => !c.waypoints && c.type !== 'workflow:boundaryEvent');
+  const hasContent = (element.children || []).some(
+    (c: any) => !c.waypoints && c.type !== 'workflow:boundaryEvent',
+  );
 
   return ELEMENT_TEMPLATES.filter((t) => {
     if (t.type === current || categoryOf(t.type) !== category) return false;
     if (t.type === 'workflow:boundaryEvent') return false;
-    if (VARIANT_TYPES.has(t.type)) return false; // offered as the four collapsed / expanded variants instead
+    if (VARIANT_TYPES.has(t.type)) return false;
     if (category === 'event' && eventRole(t.type) !== eventRole(current)) return false;
-    if (category === 'task' && hasContent && !CONTAINER_TASKS.has(t.type)) return false; // would orphan the children
+    if (category === 'task' && hasContent && !CONTAINER_TASKS.has(t.type)) return false;
     return true;
   }).map((t) => t.type);
 }
@@ -45,7 +50,11 @@ export function replacementTypes(element: any): WorkflowType[] {
 export default class CustomPopupMenuProvider {
   static $inject = ['popupMenu', 'modeling', 'selection'];
 
-  constructor(popupMenu: any, private modeling: any, private selection: any) {
+  constructor(
+    popupMenu: any,
+    private modeling: any,
+    private selection: any,
+  ) {
     popupMenu.registerProvider(REPLACE_MENU_ID, this);
   }
 
@@ -54,7 +63,11 @@ export default class CustomPopupMenuProvider {
     const current = getTemplate(element.type as WorkflowType);
     if (current && !VARIANT_TYPES.has(element.type)) {
       entries[`current-${current.type}`] = {
-        label: current.title, className: 'workflow-replace-entry', title: `Current type: ${current.title}`, active: true, disabled: false,
+        label: current.title,
+        className: 'workflow-replace-entry',
+        title: `Current type: ${current.title}`,
+        active: true,
+        disabled: false,
         action: () => {},
       };
     }
@@ -76,19 +89,23 @@ export default class CustomPopupMenuProvider {
           className: 'workflow-replace-entry',
           title: isCurrent ? `Current type: ${v.label}` : `Change to ${v.label}`,
           active: isCurrent,
-          action: () => { if (!isCurrent) this.applyVariant(element, v); },
+          action: () => {
+            if (!isCurrent) this.applyVariant(element, v);
+          },
         };
       }
     }
     return entries;
   }
 
-  getPopupMenuHeaderEntries() { return {}; }
+  getPopupMenuHeaderEntries() {
+    return {};
+  }
 
-  getEmptyPlaceholder() { return 'This element cannot be changed to another type.'; }
+  getEmptyPlaceholder() {
+    return 'This element cannot be changed to another type.';
+  }
 
-  /** Replaces the shape, keeping its centre, label, properties, flows and children. */
-  /** Collapse / expand / switch between sub-process and ad-hoc sub-process (keeps content, flows and size). */
   applyVariant(element: any, v: { type: WorkflowType; expanded: boolean }) {
     if (isSubProcessLike(element) && element.type === v.type) {
       if (!isCollapsedSub(element) !== v.expanded) this.modeling.toggleSubProcess(element);
@@ -96,7 +113,7 @@ export default class CustomPopupMenuProvider {
     }
     const wasExpanded = !isCollapsedSub(element);
     const shape = this.replace(element, v.type, { isExpanded: v.expanded });
-    // switching flavour keeps the collapsed / expanded state of a sub-process; adjust it if another one was asked for
+
     if (isSubProcessLike(element) && wasExpanded !== v.expanded) this.modeling.toggleSubProcess(shape);
     this.selection.select(shape);
     return shape;
@@ -117,15 +134,26 @@ export default class CustomPopupMenuProvider {
       ...oldBo,
       id: nextId(newType),
       type: newType,
-      // markers derived from the old type must not leak into the new one
-      eventType: undefined, taskType: undefined, gatewayType: undefined, eventDefinition: undefined, bpmnType: undefined,
-      // collapsed / expanded only exists for sub-processes (switching flavour keeps the state)
+
+      eventType: undefined,
+      taskType: undefined,
+      gatewayType: undefined,
+      eventDefinition: undefined,
+      bpmnType: undefined,
+
       ...(bothSub ? {} : { isExpanded: collapsedNew ? false : undefined, expandedBounds: undefined }),
     };
 
     const newShape = this.modeling.replaceShape(
       element,
-      { type: newType, businessObject, width, height, x: element.x + element.width / 2, y: element.y + element.height / 2 },
+      {
+        type: newType,
+        businessObject,
+        width,
+        height,
+        x: element.x + element.width / 2,
+        y: element.y + element.height / 2,
+      },
       { autoResize: false },
     );
     this.selection.select(newShape);

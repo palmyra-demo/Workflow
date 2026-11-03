@@ -1,11 +1,21 @@
 import { ReactNode, useId, useState } from 'react';
 import { Collapse, UnstyledButton } from '@mantine/core';
 
-/** open / closed state survives switching the selected element (bpmn.io behaviour) */
 const groupState = new Map<string, boolean>();
 
 export const ChevronIcon = ({ className = '' }: { className?: string }) => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden="true"><path d="m9 6 6 6-6 6" /></svg>
+  <svg
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2.2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className={className}
+    aria-hidden="true"
+  >
+    <path d="m9 6 6 6-6 6" />
+  </svg>
 );
 
 interface GroupProps {
@@ -13,17 +23,26 @@ interface GroupProps {
   title: string;
   children: ReactNode;
   defaultOpen?: boolean;
-  /** number shown next to the title (list length / issue count) */
+
   count?: number;
-  /** blue dot: the group holds user data (bpmn.io "dirty" marker) */
+
   dirty?: boolean;
-  /** red marker: the group has validation errors */
+
   invalid?: boolean;
-  /** extra control in the header, e.g. the "+" of a list */
+
   action?: ReactNode;
 }
 
-export function Group({ id, title, children, defaultOpen = false, count, dirty, invalid, action }: GroupProps) {
+export function Group({
+  id,
+  title,
+  children,
+  defaultOpen = false,
+  count,
+  dirty,
+  invalid,
+  action,
+}: GroupProps) {
   const [open, setOpen] = useState(() => groupState.get(id) ?? defaultOpen);
   const bodyId = useId();
   const toggle = () => {
@@ -34,9 +53,19 @@ export function Group({ id, title, children, defaultOpen = false, count, dirty, 
   return (
     <section className={`bpp-group${open ? ' is-open' : ''}${invalid ? ' is-invalid' : ''}`} data-group={id}>
       <div className="bpp-group-header">
-        <UnstyledButton className="bpp-group-toggle" onClick={toggle} aria-expanded={open} aria-controls={bodyId} title={title}>
+        <UnstyledButton
+          className="bpp-group-toggle"
+          onClick={toggle}
+          aria-expanded={open}
+          aria-controls={bodyId}
+          title={title}
+        >
           <span className="bpp-group-title">{title}</span>
-          {invalid ? <span className="bpp-marker bpp-marker-error" title="Has validation errors" /> : dirty ? <span className="bpp-marker bpp-marker-dirty" title="Has values" /> : null}
+          {invalid ? (
+            <span className="bpp-marker bpp-marker-error" title="Has validation errors" />
+          ) : dirty ? (
+            <span className="bpp-marker bpp-marker-dirty" title="Has values" />
+          ) : null}
           {count ? <span className="bpp-count">{count}</span> : null}
         </UnstyledButton>
         {action}

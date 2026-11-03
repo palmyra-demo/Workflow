@@ -1,18 +1,9 @@
 import BaseElementFactory from 'diagram-js/lib/core/ElementFactory';
 
-import {
-  WorkflowType,
-  WorkflowBusinessObject,
-  isConnectionType,
-  nextId,
-} from './types';
+import { WorkflowType, WorkflowBusinessObject, isConnectionType, nextId } from './types';
 import { defaultSize } from './elementTemplates';
 
 export default class CustomElementFactory extends (BaseElementFactory as any) {
-  constructor() {
-    super();
-  }
-
   private buildBusinessObject(
     type: WorkflowType,
     attrs: Partial<WorkflowBusinessObject> = {},
@@ -33,10 +24,7 @@ export default class CustomElementFactory extends (BaseElementFactory as any) {
     };
   }
 
-  createWorkflowShape(
-    type: WorkflowType,
-    attrs: Record<string, any> = {},
-  ): any {
+  createWorkflowShape(type: WorkflowType, attrs: Record<string, any> = {}): any {
     const size = defaultSize(type);
     const businessObject =
       attrs.businessObject || this.buildBusinessObject(type, attrs.businessObject || attrs);
@@ -53,10 +41,7 @@ export default class CustomElementFactory extends (BaseElementFactory as any) {
     return shape;
   }
 
-  createWorkflowConnection(
-    type: WorkflowType,
-    attrs: Record<string, any> = {},
-  ): any {
+  createWorkflowConnection(type: WorkflowType, attrs: Record<string, any> = {}): any {
     const businessObject =
       attrs.businessObject || this.buildBusinessObject(type, attrs.businessObject || attrs);
 

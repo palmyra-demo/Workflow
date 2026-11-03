@@ -12,8 +12,8 @@ import { getObstacles } from './obstacles';
 import { pathCollides, pathInside, routeAround } from './obstacleRouter';
 import { innerBounds, isPool, isSubProcessLike, processContainerOf } from '../pool/poolUtils';
 
-const STRAIGHT_INSET = 10;     
-const STRAIGHT_TOLERANCE = 8;  
+const STRAIGHT_INSET = 10;
+const STRAIGHT_TOLERANCE = 8;
 
 function isRectLike(shape: any): boolean {
   const c = categoryOf(shape.type as WorkflowType);
@@ -34,7 +34,8 @@ function layoutStraight(source: any, target: any): Point[] | null {
 
   const horizontal = /left|right/.test(orientation);
   const axis: 'x' | 'y' = horizontal ? 'y' : 'x';
-  const sm = getMid(source), tm = getMid(target);
+  const sm = getMid(source),
+    tm = getMid(target);
 
   let c: number | null = null;
   const [tLo, tHi] = acceptedRange(target, axis);
@@ -45,7 +46,10 @@ function layoutStraight(source: any, target: any): Point[] | null {
 
   const a = horizontal ? { x: sm.x, y: c } : { x: c, y: sm.y };
   const b = horizontal ? { x: tm.x, y: c } : { x: c, y: tm.y };
-  return [{ ...a, original: { ...a } }, { ...b, original: { ...b } }];
+  return [
+    { ...a, original: { ...a } },
+    { ...b, original: { ...b } },
+  ];
 }
 
 export default class CustomLayouter extends (BaseLayouter as any) {
@@ -62,18 +66,21 @@ export default class CustomLayouter extends (BaseLayouter as any) {
 
     const type = connection.type as WorkflowType;
 
-    // associations are plain straight lines, cropped afterwards
     if (type === 'workflow:association' || type === 'workflow:dataAssociation') {
-      const a = getMid(source), b = getMid(target);
-      return [{ ...a, original: { ...a } }, { ...b, original: { ...b } }];
+      const a = getMid(source),
+        b = getMid(target);
+      return [
+        { ...a, original: { ...a } },
+        { ...b, original: { ...b } },
+      ];
     }
 
     const existing: Point[] | undefined = hints.waypoints || connection.waypoints;
 
-    // Manual routing: keep the user's bendpoints, only repair the moved end.
     if (existing && existing.length > 2 && (hints.waypoints || connection.manualRouting)) {
       const start = hints.connectionStart || existing[0].original || existing[0];
-      const end = hints.connectionEnd || existing[existing.length - 1].original || existing[existing.length - 1];
+      const end =
+        hints.connectionEnd || existing[existing.length - 1].original || existing[existing.length - 1];
       const repaired = repairConnection(source, target, start, end, existing, {
         connectionStart: !!hints.connectionStart,
         connectionEnd: !!hints.connectionEnd,
@@ -84,24 +91,30 @@ export default class CustomLayouter extends (BaseLayouter as any) {
     return this.autoLayout(source, target, type);
   }
 
-  /** Straight line if possible, minimal manhattan route otherwise, detouring around obstacles. */
   autoLayout(source: any, target: any, connectionType?: string): Point[] {
     const obstacles = getObstacles(this.elementRegistry, source, target);
     const messageFlow = connectionType === 'workflow:messageFlow';
     const bounds = messageFlow ? null : this.routingBounds(source, target);
-    const start = getMid(source), end = getMid(target);
+    const start = getMid(source),
+      end = getMid(target);
 
     const candidates: Point[][] = [];
     const straight = layoutStraight(source, target);
     if (straight) candidates.push(straight);
-    candidates.push(withoutRedundantPoints(connectRectangles(source, target, start, end, messageFlow ? { preferredLayouts: ['v:v'] } : {})) as Point[]);
+    candidates.push(
+      withoutRedundantPoints(
+        connectRectangles(source, target, start, end, messageFlow ? { preferredLayouts: ['v:v'] } : {}),
+      ) as Point[],
+    );
 
     for (const c of candidates) {
       const pts = this.uncropped(c);
       if (!pathCollides(pts, obstacles) && pathInside(pts, bounds)) return c;
     }
 
-    const detour = routeAround(start, end, source, target, obstacles, bounds) || (bounds ? routeAround(start, end, source, target, obstacles) : null);
+    const detour =
+      routeAround(start, end, source, target, obstacles, bounds) ||
+      (bounds ? routeAround(start, end, source, target, obstacles) : null);
     if (detour && detour.length >= 2) {
       detour[0].original = { ...detour[0] };
       detour[detour.length - 1].original = { ...detour[detour.length - 1] };
@@ -110,7 +123,6 @@ export default class CustomLayouter extends (BaseLayouter as any) {
     return candidates[candidates.length - 1];
   }
 
-  /** Sequence flows stay inside their pool (minus header) / sub-process. */
   private routingBounds(source: any, target: any) {
     const container = processContainerOf(source);
     if (!container || container !== processContainerOf(target)) return null;
@@ -121,6 +133,6 @@ export default class CustomLayouter extends (BaseLayouter as any) {
   }
 
   private uncropped(points: Point[]): Point[] {
-    return points.map((p, i) => (i === 0 || i === points.length - 1) ? (p.original || p) : p);
+    return points.map((p, i) => (i === 0 || i === points.length - 1 ? p.original || p : p));
   }
 }

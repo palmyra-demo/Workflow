@@ -3,12 +3,52 @@ import { ActionIcon, Tooltip } from '@mantine/core';
 import { Group, ChevronIcon } from './Group';
 import { TextField } from './fields';
 
-export interface ListField { key: string; label: string; placeholder?: string; required?: boolean }
+export interface ListField {
+  key: string;
+  label: string;
+  placeholder?: string;
+  required?: boolean;
+}
 
-const PlusIcon = () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>;
-const TrashIcon = () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13M10 11v6M14 11v6" /></svg>;
+const PlusIcon = () => (
+  <svg
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2.2"
+    strokeLinecap="round"
+    aria-hidden="true"
+  >
+    <path d="M12 5v14M5 12h14" />
+  </svg>
+);
+const TrashIcon = () => (
+  <svg
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden="true"
+  >
+    <path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13M10 11v6M14 11v6" />
+  </svg>
+);
 
-export function ListGroup({ id, title, itemName, items, fields, summary, onChange, errorFor, invalid, disabledAdd, children }: {
+export function ListGroup({
+  id,
+  title,
+  itemName,
+  items,
+  fields,
+  summary,
+  onChange,
+  errorFor,
+  invalid,
+  disabledAdd,
+  children,
+}: {
   id: string;
   title: string;
   itemName: string;
@@ -46,7 +86,16 @@ export function ListGroup({ id, title, itemName, items, fields, summary, onChang
       invalid={invalid}
       action={
         <Tooltip label={`Add ${itemName}`} openDelay={400} withArrow>
-          <ActionIcon className="bpp-add" variant="subtle" size="sm" aria-label={`Add ${itemName}`} disabled={disabledAdd} onClick={add}><PlusIcon /></ActionIcon>
+          <ActionIcon
+            className="bpp-add"
+            variant="subtle"
+            size="sm"
+            aria-label={`Add ${itemName}`}
+            disabled={disabledAdd}
+            onClick={add}
+          >
+            <PlusIcon />
+          </ActionIcon>
         </Tooltip>
       }
     >
@@ -59,14 +108,32 @@ export function ListGroup({ id, title, itemName, items, fields, summary, onChang
             const open = openIndex === i;
             const itemInvalid = fields.some((f) => errorFor?.(i, f.key));
             return (
-              <li key={i} className={`bpp-list-item${open ? ' is-open' : ''}${itemInvalid ? ' is-invalid' : ''}`}>
+              <li
+                key={i}
+                className={`bpp-list-item${open ? ' is-open' : ''}${itemInvalid ? ' is-invalid' : ''}`}
+              >
                 <div className="bpp-list-item-header">
-                  <button type="button" className="bpp-list-item-toggle" aria-expanded={open} onClick={() => setOpenIndex(open ? null : i)} title={summary(item)}>
+                  <button
+                    type="button"
+                    className="bpp-list-item-toggle"
+                    aria-expanded={open}
+                    onClick={() => setOpenIndex(open ? null : i)}
+                    title={summary(item)}
+                  >
                     <ChevronIcon className={open ? 'is-open' : ''} />
                     <span className="bpp-list-item-summary">{summary(item)}</span>
                   </button>
                   <Tooltip label={`Remove ${itemName}`} openDelay={400} withArrow>
-                    <ActionIcon className="bpp-remove" variant="subtle" color="red" size="sm" aria-label={`Remove ${itemName} ${i + 1}`} onClick={() => remove(i)}><TrashIcon /></ActionIcon>
+                    <ActionIcon
+                      className="bpp-remove"
+                      variant="subtle"
+                      color="red"
+                      size="sm"
+                      aria-label={`Remove ${itemName} ${i + 1}`}
+                      onClick={() => remove(i)}
+                    >
+                      <TrashIcon />
+                    </ActionIcon>
                   </Tooltip>
                 </div>
                 {open && (

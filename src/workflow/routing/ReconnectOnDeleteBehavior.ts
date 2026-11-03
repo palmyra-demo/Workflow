@@ -5,44 +5,36 @@ const isSequenceFlow = (c: any) => c?.type === SEQUENCE_FLOW;
 
 type Bridge = { inFlow: any; outFlow: any };
 
-/**
- * Deleting an element from the middle of a flow must not tear the flow apart.
- *
- * A node with exactly ONE incoming and ONE outgoing sequence flow is "in the middle": when it is
- * deleted its neighbours are joined by a new sequence flow (A → B → C  becomes  A → C).
- *  - The new flow keeps the name / condition / properties of the flow that LEFT the source
- *    (that is where branch conditions of gateways live).
- *  - Several chained nodes deleted together are bridged once, end to end (A → B → C → D, delete B+C ⇒ A → D).
- *  - Nodes with several incoming or outgoing flows (gateway splits / joins), start and end events,
- *    and nodes whose flows are deleted explicitly too are NOT bridged – their flows are simply removed,
- *    because there is no single obvious replacement.
- *  - Skipped when the rules forbid the connection or when the neighbours are already connected.
- *
- * Everything runs inside the delete command, so one Undo brings back the node AND removes the bridge.
- */
 export default class ReconnectOnDeleteBehavior extends (CommandInterceptor as any) {
   static $inject = ['eventBus', 'modeling', 'rules'];
 
-  constructor(eventBus: any, private modeling: any, private rules: any) {
+  constructor(
+    eventBus: any,
+    private modeling: any,
+    private rules: any,
+  ) {
     super(eventBus);
-    // `elements.delete` is what Delete key, context pad and lasso-delete all end up in
+
     this.preExecute('elements.delete', 2000, (e: any) => this.bridge(e.context.elements || []));
   }
 
   private bridge(elements: any[]): void {
-    // everything that disappears: the selection plus everything nested inside deleted containers
     const doomed = new Set<any>();
-    const collect = (el: any) => { if (!el || doomed.has(el)) return; doomed.add(el); (el.children || []).forEach(collect); };
+    const collect = (el: any) => {
+      if (!el || doomed.has(el)) return;
+      doomed.add(el);
+      (el.children || []).forEach(collect);
+    };
     elements.forEach(collect);
     const explicit = new Set<any>(elements);
 
     const bridges = new Map<any, Bridge>();
     for (const el of elements) {
-      if (el.waypoints || el.labelTarget) continue; // connections and labels
+      if (el.waypoints || el.labelTarget) continue;
       const incoming = (el.incoming || []).filter(isSequenceFlow);
       const outgoing = (el.outgoing || []).filter(isSequenceFlow);
       if (incoming.length !== 1 || outgoing.length !== 1) continue;
-      if (explicit.has(incoming[0]) || explicit.has(outgoing[0])) continue; // the user removes the flows on purpose
+      if (explicit.has(incoming[0]) || explicit.has(outgoing[0])) continue;
       bridges.set(el, { inFlow: incoming[0], outFlow: outgoing[0] });
     }
 
@@ -50,17 +42,18 @@ export default class ReconnectOnDeleteBehavior extends (CommandInterceptor as an
     for (const node of bridges.keys()) {
       if (done.has(node)) continue;
 
-      // walk to both ends of the chain of deleted middle nodes this node belongs to
       const chain: any[] = [node];
       for (let head = node; ;) {
         const prev = bridges.get(head)!.inFlow.source;
         if (!bridges.has(prev) || chain.includes(prev)) break;
-        chain.unshift(prev); head = prev;
+        chain.unshift(prev);
+        head = prev;
       }
       for (let tail = node; ;) {
         const next = bridges.get(tail)!.outFlow.target;
         if (!bridges.has(next) || chain.includes(next)) break;
-        chain.push(next); tail = next;
+        chain.push(next);
+        tail = next;
       }
       chain.forEach((c) => done.add(c));
 
@@ -83,7 +76,8 @@ export default class ReconnectOnDeleteBehavior extends (CommandInterceptor as an
     const extra: Record<string, unknown> = {};
     if (bo.conditionExpression) extra.conditionExpression = bo.conditionExpression;
     if (bo.documentation) extra.documentation = bo.documentation;
-    if (bo.customProperties && Object.keys(bo.customProperties).length) extra.customProperties = JSON.parse(JSON.stringify(bo.customProperties));
+    if (bo.customProperties && Object.keys(bo.customProperties).length)
+      extra.customProperties = JSON.parse(JSON.stringify(bo.customProperties));
     if (bo.palmyra && Object.keys(bo.palmyra).length) extra.palmyra = JSON.parse(JSON.stringify(bo.palmyra));
     if (Object.keys(extra).length) this.modeling.updateProperties(connection, extra);
   }

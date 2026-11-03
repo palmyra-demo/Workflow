@@ -10,7 +10,7 @@
   line-height: 1.4;
   white-space: normal;
   font-weight: 400;
-  transition: width .2s cubic-bezier(.4, 0, .2, 1);
+  transition: width 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .bpp.is-resizing {
@@ -56,7 +56,7 @@
   left: 0;
   width: 2px;
   background: transparent;
-  transition: background .12s;
+  transition: background 0.12s;
 }
 
 .bpp-resizer:hover::after,
@@ -64,7 +64,6 @@
   background: #4d90ff;
 }
 
-/* collapsed rail */
 .bpp-rail {
   position: absolute;
   inset: 0;
@@ -91,11 +90,10 @@
 .bpp-rail span {
   font-size: 12px;
   font-weight: 600;
-  letter-spacing: .02em;
+  letter-spacing: 0.02em;
   writing-mode: vertical-rl;
 }
 
-/* header: icon + name + type */
 .bpp-header {
   display: flex;
   flex: none;
@@ -165,7 +163,6 @@
   font-size: 13px;
 }
 
-/* groups */
 .bpp-group {
   border-bottom: 1px solid #ddd;
 }
@@ -179,7 +176,7 @@
   background: #fafafa;
 }
 
-.bpp-group.is-open>.bpp-group-header {
+.bpp-group.is-open > .bpp-group-header {
   background: #f1f1f1;
 }
 
@@ -218,7 +215,7 @@
 .bpp-group-chevron svg {
   width: 13px;
   height: 13px;
-  transition: transform .12s;
+  transition: transform 0.12s;
 }
 
 .bpp-group-chevron svg.is-open,
@@ -258,11 +255,10 @@
   background: #cc3333;
 }
 
-.bpp-group.is-invalid>.bpp-group-header {
+.bpp-group.is-invalid > .bpp-group-header {
   box-shadow: inset 3px 0 0 #cc3333;
 }
 
-/* entries */
 .bpp .bpp-entry {
   margin: 0;
 }
@@ -300,7 +296,9 @@
   color: #252525;
   font-size: 13px;
   line-height: 26px;
-  transition: border-color .1s, background-color .1s;
+  transition:
+    border-color 0.1s,
+    background-color 0.1s;
 }
 
 .bpp .bpp-input::placeholder {
@@ -315,7 +313,7 @@
 .bpp .bpp-input:focus-within {
   border-color: #4d90ff;
   background: #fff;
-  outline: 2px solid rgba(77, 144, 255, .28);
+  outline: 2px solid rgba(77, 144, 255, 0.28);
   outline-offset: 0;
 }
 
@@ -326,7 +324,7 @@
 }
 
 .bpp .bpp-input[aria-invalid='true']:focus {
-  outline-color: rgba(204, 51, 51, .25);
+  outline-color: rgba(204, 51, 51, 0.25);
 }
 
 .bpp .bpp-input[readonly],
@@ -368,7 +366,7 @@
 .bpp-dropdown {
   border: 1px solid #ccc;
   border-radius: 2px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, .15);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 
 .bpp-option {
@@ -377,7 +375,6 @@
   border-radius: 0;
 }
 
-/* lists (input / output mapping, headers) */
 .bpp-empty {
   margin: 0;
   padding: 8px 10px;
@@ -413,7 +410,7 @@
   padding-right: 4px;
 }
 
-.bpp-list-item.is-open>.bpp-list-item-header {
+.bpp-list-item.is-open > .bpp-list-item-header {
   border-bottom: 1px solid #e5e5e5;
   background: #f8f8f8;
 }
@@ -438,7 +435,7 @@
   width: 12px;
   height: 12px;
   color: #888;
-  transition: transform .12s;
+  transition: transform 0.12s;
 }
 
 .bpp-list-item-summary {
@@ -462,7 +459,6 @@
   height: 14px;
 }
 
-/* validation list */
 .bpp-ok {
   padding: 7px 10px;
   border-radius: 2px;

@@ -1,10 +1,6 @@
 import { categoryOf, isConnectionType, isWorkflowElement, WorkflowType } from '../types';
+import { isAncestorOf } from '../pool/poolUtils';
 import { Rect } from './geometry';
-
-function isAncestor(candidate: any, element: any): boolean {
-  for (let p = element?.parent; p; p = p.parent) if (p === candidate) return true;
-  return false;
-}
 
 export function getObstacles(elementRegistry: any, source: any, target: any): Rect[] {
   const result: Rect[] = [];
@@ -15,8 +11,8 @@ export function getObstacles(elementRegistry: any, source: any, target: any): Re
     if (el.width == null || el.height == null) return;
     const cat = categoryOf(el.type as WorkflowType);
     if (cat === 'container' || el.type === 'workflow:group') return;
-    if (isAncestor(el, source) || isAncestor(el, target)) return;
-    if (isAncestor(source, el) || isAncestor(target, el)) return;
+    if (isAncestorOf(el, source) || isAncestorOf(el, target)) return;
+    if (isAncestorOf(source, el) || isAncestorOf(target, el)) return;
     if (el.host === source || el.host === target) return;
     if ((source as any)?.host === el || (target as any)?.host === el) return;
     result.push({ x: el.x, y: el.y, width: el.width, height: el.height });

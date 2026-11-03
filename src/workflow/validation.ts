@@ -1,113 +1,223 @@
-import { WorkflowGraph } from './io/graph';
-import { categoryOf } from './types';
-import { applicableExtensions, validateProperties } from './palmyraExtensions';
+import { WorkflowGraph, GraphEdge, GraphNode } from './io/graph';
+import { categoryOf, isEndEventType, isStartEventType } from './types';
+import { validateProperties } from './palmyraExtensions';
 
-export interface ValidationIssue { level: 'error' | 'warning'; message: string; elementId?: string; field?: string; }
+export interface ValidationIssue {
+  level: 'error' | 'warning';
+  message: string;
+  elementId?: string;
+  field?: string;
+}
+
+const GEOMETRY_TOLERANCE = 1;
+
+const SUB_PROCESS_TYPES = ['workflow:subProcess', 'workflow:adHocSubProcess', 'workflow:transaction'];
+const CONTAINER_TYPES = new Set(['workflow:pool', 'workflow:lane', ...SUB_PROCESS_TYPES]);
+
+const labelOf = (item: { name?: string; id: string }) => item.name || item.id;
+const shortType = (type: string) => type.replace('workflow:', '');
+
+interface Context {
+  nodes: GraphNode[];
+  edges: GraphEdge[];
+  nodeById: Map<string, GraphNode>;
+  issues: ValidationIssue[];
+}
+
+const error = (ctx: Context, message: string, elementId?: string) =>
+  ctx.issues.push({ level: 'error', message, elementId });
+
+const warning = (ctx: Context, message: string, elementId?: string) =>
+  ctx.issues.push({ level: 'warning', message, elementId });
+
+function countSequenceFlows(edges: GraphEdge[]) {
+  const incoming = new Map<string, number>();
+  const outgoing = new Map<string, number>();
+  for (const edge of edges) {
+    if (edge.type !== 'workflow:sequenceFlow') continue;
+    outgoing.set(edge.source, (outgoing.get(edge.source) || 0) + 1);
+    incoming.set(edge.target, (incoming.get(edge.target) || 0) + 1);
+  }
+  return { incoming, outgoing };
+}
+
+const MAX_NESTING = 50;
+
+function findPool(node: GraphNode | undefined, nodeById: Map<string, GraphNode>) {
+  let current = node;
+  for (let depth = 0; current && depth <= MAX_NESTING; depth++) {
+    if (current.type === 'workflow:pool') return current;
+    current = current.parent ? nodeById.get(current.parent) : undefined;
+  }
+  return undefined;
+}
+
+function checkStartAndEndEvents(ctx: Context) {
+  if (!ctx.nodes.some((n) => isStartEventType(n.type))) error(ctx, 'Workflow has no start event.');
+  if (!ctx.nodes.some((n) => isEndEventType(n.type))) error(ctx, 'Workflow has no end event.');
+}
+
+function checkNodes(ctx: Context) {
+  const { incoming, outgoing } = countSequenceFlows(ctx.edges);
+  const seenIds = new Set<string>();
+
+  for (const node of ctx.nodes) {
+    const id = node.id;
+    const name = labelOf(node);
+    if (seenIds.has(id)) error(ctx, `Duplicate element id "${id}".`, id);
+    seenIds.add(id);
+
+    const inCount = incoming.get(id) || 0;
+    const outCount = outgoing.get(id) || 0;
+
+    if (isStartEventType(node.type)) {
+      if (inCount > 0) error(ctx, `Start event "${name}" must not have incoming sequence flows.`, id);
+      if (outCount === 0) warning(ctx, `Start event "${name}" has no outgoing flow.`, id);
+    }
+    if (isEndEventType(node.type)) {
+      if (outCount > 0) error(ctx, `End event "${name}" must not have outgoing sequence flows.`, id);
+      if (inCount === 0) warning(ctx, `End event "${name}" has no incoming flow.`, id);
+    }
+
+    const category = categoryOf(node.type);
+    if ((category === 'task' || category === 'gateway') && inCount === 0 && outCount === 0) {
+      warning(ctx, `"${name}" is not connected to anything.`, id);
+    }
+    if (category === 'gateway' && inCount + outCount < 2) {
+      warning(ctx, `Gateway "${name}" should split or merge flows.`, id);
+    }
+
+    for (const issue of validateProperties(node.type, node.properties || {})) {
+      ctx.issues.push({ ...issue, elementId: id });
+    }
+  }
+}
+
+function checkContainers(ctx: Context) {
+  const hasContainers = ctx.nodes.some((n) => n.type === 'workflow:pool' || n.type === 'workflow:lane');
+  if (!hasContainers) return;
+
+  for (const node of ctx.nodes) {
+    const name = labelOf(node);
+
+    if (node.type === 'workflow:pool') {
+      if (node.parent) error(ctx, `Pool "${name}" cannot be inside another element.`, node.id);
+      continue;
+    }
+    if (node.type === 'workflow:lane') {
+      const parent = node.parent ? ctx.nodeById.get(node.parent) : undefined;
+      if (!parent || parent.type !== 'workflow:pool')
+        error(ctx, `Lane "${name}" must be inside a Pool.`, node.id);
+      continue;
+    }
+
+    const category = categoryOf(node.type);
+    const isFlowNode = category === 'event' || category === 'task' || category === 'gateway';
+    if (!isFlowNode) continue;
+
+    if (!findPool(node, ctx.nodeById)) {
+      error(
+        ctx,
+        `Element "${name}" must be inside a Pool/Lane when the workflow uses Pool/Lane containers.`,
+        node.id,
+      );
+    }
+    if (node.parent && node.type !== 'workflow:boundaryEvent') {
+      const parent = ctx.nodeById.get(node.parent);
+      if (parent && !CONTAINER_TYPES.has(parent.type)) {
+        error(ctx, `Element "${name}" has invalid parent "${labelOf(parent)}".`, node.id);
+      }
+    }
+  }
+}
+
+function checkGeometry(ctx: Context) {
+  const tol = GEOMETRY_TOLERANCE;
+  for (const node of ctx.nodes) {
+    const parent = node.parent ? ctx.nodeById.get(node.parent) : undefined;
+    if (!parent || !CONTAINER_TYPES.has(parent.type) || node.type === 'workflow:boundaryEvent') continue;
+
+    const parentIsCollapsed =
+      SUB_PROCESS_TYPES.includes(parent.type) && parent.properties?.isExpanded === false;
+    if (parentIsCollapsed) continue;
+
+    const inside =
+      node.x >= parent.x - tol &&
+      node.y >= parent.y - tol &&
+      node.x + node.width <= parent.x + parent.width + tol &&
+      node.y + node.height <= parent.y + parent.height + tol;
+    if (!inside) {
+      error(
+        ctx,
+        `"${labelOf(node)}" lies outside its ${shortType(parent.type)} "${labelOf(parent)}".`,
+        node.id,
+      );
+    }
+  }
+
+  const lanes = ctx.nodes.filter((n) => n.type === 'workflow:lane');
+  for (const pool of ctx.nodes.filter((n) => n.type === 'workflow:pool')) {
+    const own = lanes.filter((l) => l.parent === pool.id).sort((a, b) => a.y - b.y);
+    for (let i = 1; i < own.length; i++) {
+      const previous = own[i - 1];
+      if (own[i].y < previous.y + previous.height - tol) {
+        error(ctx, `Lanes "${labelOf(previous)}" and "${labelOf(own[i])}" overlap.`, own[i].id);
+      }
+    }
+  }
+}
+
+function checkPoolCrossing(ctx: Context) {
+  for (const edge of ctx.edges) {
+    const source = ctx.nodeById.get(edge.source);
+    const target = ctx.nodeById.get(edge.target);
+    if (!source || !target) continue;
+
+    const sourcePool = findPool(source, ctx.nodeById)?.id;
+    const targetPool = findPool(target, ctx.nodeById)?.id;
+
+    if (edge.type === 'workflow:sequenceFlow' && sourcePool !== targetPool) {
+      error(
+        ctx,
+        `Sequence flow "${edge.id}" cannot cross Pool boundaries. Use Message Flow between different Pools.`,
+        edge.id,
+      );
+    }
+    if (edge.type === 'workflow:messageFlow' && sourcePool && targetPool && sourcePool === targetPool) {
+      error(ctx, `Message flow "${edge.id}" must connect elements in different Pools.`, edge.id);
+    }
+  }
+}
+
+function checkEdges(ctx: Context) {
+  for (const edge of ctx.edges) {
+    if (!ctx.nodeById.has(edge.source)) {
+      error(ctx, `Flow "${edge.id}" references missing source "${edge.source}".`, edge.id);
+    }
+    if (!ctx.nodeById.has(edge.target)) {
+      error(ctx, `Flow "${edge.id}" references missing target "${edge.target}".`, edge.id);
+    }
+    if (edge.type === 'workflow:sequenceFlow' && edge.source === edge.target) {
+      error(ctx, `Sequence flow "${edge.id}" cannot connect an element to itself.`, edge.id);
+    }
+    if (!edge.waypoints?.length) warning(ctx, `Flow "${edge.id}" has no DI waypoints.`, edge.id);
+  }
+}
 
 export function validate(graph: WorkflowGraph): ValidationIssue[] {
-  const issues: ValidationIssue[] = [];
-  const { nodes, edges } = graph;
-  const incoming = new Map<string, number>(), outgoing = new Map<string, number>();
-  for (const e of edges) if (e.type === 'workflow:sequenceFlow') { outgoing.set(e.source, (outgoing.get(e.source) || 0) + 1); incoming.set(e.target, (incoming.get(e.target) || 0) + 1); }
-  const startEvents = nodes.filter(n => /startevent$/i.test(n.type) || n.type === 'workflow:startEvent');
-  const endEvents = nodes.filter(n => /endevent$/i.test(n.type) || n.type === 'workflow:endEvent');
-  if (!startEvents.length) issues.push({ level: 'error', message: 'Workflow has no start event.' });
-  if (!endEvents.length) issues.push({ level: 'error', message: 'Workflow has no end event.' });
-
-  const ids = new Set<string>();
-  for (const n of nodes) {
-    if (ids.has(n.id)) issues.push({ level: 'error', message: `Duplicate element id "${n.id}".`, elementId: n.id });
-    ids.add(n.id);
-    const inc = incoming.get(n.id) || 0, out = outgoing.get(n.id) || 0;
-    if ((/startevent$/i.test(n.type) || n.type === 'workflow:startEvent') && inc > 0) issues.push({ level: 'error', message: `Start event "${n.name || n.id}" must not have incoming sequence flows.`, elementId: n.id });
-    if ((/startevent$/i.test(n.type) || n.type === 'workflow:startEvent') && out === 0) issues.push({ level: 'warning', message: `Start event "${n.name || n.id}" has no outgoing flow.`, elementId: n.id });
-    if ((/endevent$/i.test(n.type) || n.type === 'workflow:endEvent') && out > 0) issues.push({ level: 'error', message: `End event "${n.name || n.id}" must not have outgoing sequence flows.`, elementId: n.id });
-    if ((/endevent$/i.test(n.type) || n.type === 'workflow:endEvent') && inc === 0) issues.push({ level: 'warning', message: `End event "${n.name || n.id}" has no incoming flow.`, elementId: n.id });
-    const cat = categoryOf(n.type); if ((cat === 'task' || cat === 'gateway') && inc === 0 && out === 0) issues.push({ level: 'warning', message: `"${n.name || n.id}" is not connected to anything.`, elementId: n.id });
-    if (cat === 'gateway' && inc + out < 2) issues.push({ level: 'warning', message: `Gateway "${n.name || n.id}" should split or merge flows.`, elementId: n.id });
-    const propsIssues = validateProperties(n.type, n.properties || {}); for (const x of propsIssues) issues.push({ ...x, elementId: n.id });
-    const allowed = applicableExtensions(n.type); const p: any = n.properties || {}; for (const key of Object.keys(p)) { if (key.startsWith('palmyra.') && !allowed.includes(key.slice(8))) issues.push({ level: 'error', message: `Extension ${key.slice(8)} is not applicable to ${n.type.replace('workflow:', '')}.`, elementId: n.id }); }
-  }
-
-  const pools = nodes.filter(n => n.type === 'workflow:pool');
-  const lanes = nodes.filter(n => n.type === 'workflow:lane');
-  const hasContainerModel = pools.length > 0 || lanes.length > 0;
-  const nodeById = new Map(nodes.map(n => [n.id, n]));
-  const containerTypes = new Set(['workflow:pool', 'workflow:lane', 'workflow:subProcess', 'workflow:adHocSubProcess', 'workflow:transaction']);
-  const isFlowNode = (n: any) => categoryOf(n.type) === 'event' || categoryOf(n.type) === 'task' || categoryOf(n.type) === 'gateway';
-  const findPool = (n: any) => {
-    if (n?.type === 'workflow:pool') return n;
-    let current: any = n;
-    while (current?.parent) {
-      const parent = nodeById.get(current.parent);
-      if (!parent) break;
-      if (parent.type === 'workflow:pool') return parent;
-      current = parent;
-    }
-    return undefined;
+  const ctx: Context = {
+    nodes: graph.nodes,
+    edges: graph.edges,
+    nodeById: new Map(graph.nodes.map((n) => [n.id, n])),
+    issues: [],
   };
-  if (hasContainerModel) {
-    for (const n of nodes) {
-      if (n.type === 'workflow:pool') {
-        if (n.parent) issues.push({ level: 'error', message: `Pool "${n.name || n.id}" cannot be inside another element.`, elementId: n.id });
-        continue;
-      }
-      if (n.type === 'workflow:lane') {
-        const parent = n.parent ? nodeById.get(n.parent) : undefined;
-        if (!parent || parent.type !== 'workflow:pool') issues.push({ level: 'error', message: `Lane "${n.name || n.id}" must be inside a Pool.`, elementId: n.id });
-        continue;
-      }
-      if (!isFlowNode(n)) continue;
-      const pool = findPool(n);
-      if (!pool) issues.push({ level: 'error', message: `Element "${n.name || n.id}" must be inside a Pool/Lane when the workflow uses Pool/Lane containers.`, elementId: n.id });
-      if (n.parent && n.type !== 'workflow:boundaryEvent') {
-        const parent = nodeById.get(n.parent);
-        if (parent && !containerTypes.has(parent.type)) issues.push({ level: 'error', message: `Element "${n.name || n.id}" has invalid parent "${parent.name || parent.id}".`, elementId: n.id });
-      }
-    }
-  }
-  // geometry: children inside their pool / lane / sub-process, lanes tile their pool without overlap
-  const TOL = 1;
-  const collapsedSubProcessTypes = new Set([
-    'workflow:subProcess',
-    'workflow:adHocSubProcess',
-    'workflow:transaction',
-  ]);
-  for (const n of nodes) {
-    const parent = n.parent ? nodeById.get(n.parent) : undefined;
-    if (!parent || !containerTypes.has(parent.type) || n.type === 'workflow:boundaryEvent') continue;
-    // A collapsed sub-process intentionally keeps its children at their expanded
-    // coordinates while hiding them. Its 100x80 collapsed bounds must therefore
-    // not be used for child-containment validation.
-    if (collapsedSubProcessTypes.has(parent.type) && parent.properties?.isExpanded === false) continue;
-    const inside = n.x >= parent.x - TOL && n.y >= parent.y - TOL && n.x + n.width <= parent.x + parent.width + TOL && n.y + n.height <= parent.y + parent.height + TOL;
-    if (!inside) issues.push({ level: 'error', message: `"${n.name || n.id}" lies outside its ${parent.type.replace('workflow:', '')} "${parent.name || parent.id}".`, elementId: n.id });
-  }
-  for (const pool of pools) {
-    const own = lanes.filter(l => l.parent === pool.id).sort((a, b) => a.y - b.y);
-    for (let i = 1; i < own.length; i++) {
-      if (own[i].y < own[i - 1].y + own[i - 1].height - TOL) issues.push({ level: 'error', message: `Lanes "${own[i - 1].name || own[i - 1].id}" and "${own[i].name || own[i].id}" overlap.`, elementId: own[i].id });
-    }
-  }
-  for (const e of edges) {
-    const source = nodeById.get(e.source);
-    const target = nodeById.get(e.target);
-    if (!source || !target) continue;
-    const sourcePool = findPool(source)?.id;
-    const targetPool = findPool(target)?.id;
-    if (e.type === 'workflow:sequenceFlow' && sourcePool !== targetPool) {
-      issues.push({ level: 'error', message: `Sequence flow "${e.id}" cannot cross Pool boundaries. Use Message Flow between different Pools.`, elementId: e.id });
-    }
-    if (e.type === 'workflow:messageFlow' && sourcePool && targetPool && sourcePool === targetPool) {
-      issues.push({ level: 'error', message: `Message flow "${e.id}" must connect elements in different Pools.`, elementId: e.id });
-    }
-  }
 
-  for (const e of edges) {
-    if (!nodes.some(n => n.id === e.source)) issues.push({ level: 'error', message: `Flow "${e.id}" references missing source "${e.source}".`, elementId: e.id });
-    if (!nodes.some(n => n.id === e.target)) issues.push({ level: 'error', message: `Flow "${e.id}" references missing target "${e.target}".`, elementId: e.id });
-    if (e.type === 'workflow:sequenceFlow' && e.source === e.target) issues.push({ level: 'error', message: `Sequence flow "${e.id}" cannot connect an element to itself.`, elementId: e.id });
-    if (!e.waypoints?.length) issues.push({ level: 'warning', message: `Flow "${e.id}" has no DI waypoints.`, elementId: e.id });
-  }
-  return issues;
+  checkStartAndEndEvents(ctx);
+  checkNodes(ctx);
+  checkContainers(ctx);
+  checkGeometry(ctx);
+  checkPoolCrossing(ctx);
+  checkEdges(ctx);
+
+  return ctx.issues;
 }

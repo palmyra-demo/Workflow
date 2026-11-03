@@ -17,8 +17,8 @@ const WorkflowPage = () => {
     const [fileMenuOpen, setFileMenuOpen] = useState(false);
     const [versionsPageOpen, setVersionsPageOpen] = useState(false);
     const [openWithPublish, setOpenWithPublish] = useState(false);
-    // path of the collapsed sub-process that is open (empty = the whole process is shown)
     const [crumbs, setCrumbs] = useState<Array<{ id: string | null; name: string }>>([]);
+
     useEffect(() => {
         if (!modeler) return;
         const bus = modeler.get('eventBus');

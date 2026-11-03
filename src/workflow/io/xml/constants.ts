@@ -1,0 +1,182 @@
+export const BPMN_NS = 'http://www.omg.org/spec/BPMN/20100524/MODEL';
+export const BPMNDI_NS = 'http://www.omg.org/spec/BPMN/20100524/DI';
+export const DC_NS = 'http://www.omg.org/spec/DD/20100524/DC';
+export const DI_NS = 'http://www.omg.org/spec/DD/20100524/DI';
+export const PALMYRA_NS = 'urn:palmyra:bpmn:extensions:1.0';
+export const LEGACY_NS = 'http://example.com/workflow';
+
+export const EXPORTER_NAME = 'Palmyra Custom BPMN Workflow Editor';
+export const EXPORTER_VERSION = '1.1';
+export const LEGACY_EXPORTER_VERSION = '1.0';
+
+export const TAG_FOR_TYPE: Record<string, string> = {
+  'workflow:startEvent': 'startEvent',
+  'workflow:endEvent': 'endEvent',
+  'workflow:intermediateEvent': 'intermediateCatchEvent',
+  'workflow:messageStartEvent': 'startEvent',
+  'workflow:messageIntermediateEvent': 'intermediateCatchEvent',
+  'workflow:messageEndEvent': 'endEvent',
+  'workflow:timerStartEvent': 'startEvent',
+  'workflow:timerIntermediateEvent': 'intermediateCatchEvent',
+  'workflow:timerEndEvent': 'endEvent',
+  'workflow:signalStartEvent': 'startEvent',
+  'workflow:signalIntermediateEvent': 'intermediateCatchEvent',
+  'workflow:signalEndEvent': 'endEvent',
+  'workflow:errorStartEvent': 'startEvent',
+  'workflow:errorEndEvent': 'endEvent',
+  'workflow:conditionalStartEvent': 'startEvent',
+  'workflow:conditionalIntermediateEvent': 'intermediateCatchEvent',
+  'workflow:escalationStartEvent': 'startEvent',
+  'workflow:escalationIntermediateEvent': 'intermediateCatchEvent',
+  'workflow:escalationEndEvent': 'endEvent',
+  'workflow:compensationIntermediateEvent': 'intermediateThrowEvent',
+  'workflow:compensationEndEvent': 'endEvent',
+  'workflow:linkIntermediateEvent': 'intermediateThrowEvent',
+  'workflow:multipleStartEvent': 'startEvent',
+  'workflow:multipleIntermediateEvent': 'intermediateCatchEvent',
+  'workflow:multipleEndEvent': 'endEvent',
+  'workflow:parallelMultipleStartEvent': 'startEvent',
+  'workflow:parallelMultipleIntermediateEvent': 'intermediateCatchEvent',
+  'workflow:parallelMultipleEndEvent': 'endEvent',
+  'workflow:cancelEndEvent': 'endEvent',
+  'workflow:terminateEndEvent': 'endEvent',
+  'workflow:task': 'task',
+  'workflow:userTask': 'userTask',
+  'workflow:serviceTask': 'serviceTask',
+  'workflow:manualTask': 'manualTask',
+  'workflow:scriptTask': 'scriptTask',
+  'workflow:businessRuleTask': 'businessRuleTask',
+  'workflow:sendTask': 'sendTask',
+  'workflow:receiveTask': 'receiveTask',
+  'workflow:subProcess': 'subProcess',
+  'workflow:adHocSubProcess': 'adHocSubProcess',
+  'workflow:callActivity': 'callActivity',
+  'workflow:transaction': 'transaction',
+  'workflow:exclusiveGateway': 'exclusiveGateway',
+  'workflow:parallelGateway': 'parallelGateway',
+  'workflow:inclusiveGateway': 'inclusiveGateway',
+  'workflow:eventBasedGateway': 'eventBasedGateway',
+  'workflow:complexGateway': 'complexGateway',
+  'workflow:dataObject': 'dataObjectReference',
+  'workflow:dataInput': 'dataInput',
+  'workflow:dataOutput': 'dataOutput',
+  'workflow:dataStore': 'dataStoreReference',
+  'workflow:pool': 'participant',
+  'workflow:lane': 'lane',
+  'workflow:group': 'group',
+  'workflow:textAnnotation': 'textAnnotation',
+  'workflow:boundaryEvent': 'boundaryEvent',
+};
+
+export const EVENT_DEFINITION_FOR_TYPE: Record<string, string> = {
+  'workflow:messageStartEvent': 'messageEventDefinition',
+  'workflow:messageIntermediateEvent': 'messageEventDefinition',
+  'workflow:messageEndEvent': 'messageEventDefinition',
+  'workflow:timerStartEvent': 'timerEventDefinition',
+  'workflow:timerIntermediateEvent': 'timerEventDefinition',
+  'workflow:timerEndEvent': 'timerEventDefinition',
+  'workflow:signalStartEvent': 'signalEventDefinition',
+  'workflow:signalIntermediateEvent': 'signalEventDefinition',
+  'workflow:signalEndEvent': 'signalEventDefinition',
+  'workflow:errorStartEvent': 'errorEventDefinition',
+  'workflow:errorEndEvent': 'errorEventDefinition',
+  'workflow:conditionalStartEvent': 'conditionalEventDefinition',
+  'workflow:conditionalIntermediateEvent': 'conditionalEventDefinition',
+  'workflow:escalationStartEvent': 'escalationEventDefinition',
+  'workflow:escalationIntermediateEvent': 'escalationEventDefinition',
+  'workflow:escalationEndEvent': 'escalationEventDefinition',
+  'workflow:compensationIntermediateEvent': 'compensateEventDefinition',
+  'workflow:compensationEndEvent': 'compensateEventDefinition',
+  'workflow:linkIntermediateEvent': 'linkEventDefinition',
+  'workflow:multipleStartEvent': 'multipleEventDefinition',
+  'workflow:multipleIntermediateEvent': 'multipleEventDefinition',
+  'workflow:multipleEndEvent': 'multipleEventDefinition',
+  'workflow:parallelMultipleStartEvent': 'parallelMultipleEventDefinition',
+  'workflow:parallelMultipleIntermediateEvent': 'parallelMultipleEventDefinition',
+  'workflow:parallelMultipleEndEvent': 'parallelMultipleEventDefinition',
+  'workflow:cancelEndEvent': 'cancelEventDefinition',
+  'workflow:terminateEndEvent': 'terminateEventDefinition',
+};
+
+export const SIMPLE_EXTENSIONS = [
+  'taskDefinition',
+  'scriptDefinition',
+  'assignmentDefinition',
+  'taskSchedule',
+  'formDefinition',
+  'calledElement',
+  'messageSubscription',
+  'multiInstanceCollection',
+  'businessRef',
+  'taskDescription',
+];
+
+export const BOOLEAN_ATTRIBUTES = ['propagateAllParentVariables', 'required'];
+
+export const SUB_PROCESS_TAGS = ['subProcess', 'adHocSubProcess', 'transaction'];
+
+export const START_EVENT_BY_DEFINITION: Record<string, string> = {
+  messageEventDefinition: 'workflow:messageStartEvent',
+  timerEventDefinition: 'workflow:timerStartEvent',
+  signalEventDefinition: 'workflow:signalStartEvent',
+  errorEventDefinition: 'workflow:errorStartEvent',
+  conditionalEventDefinition: 'workflow:conditionalStartEvent',
+  escalationEventDefinition: 'workflow:escalationStartEvent',
+  multipleEventDefinition: 'workflow:multipleStartEvent',
+  parallelMultipleEventDefinition: 'workflow:parallelMultipleStartEvent',
+};
+
+export const END_EVENT_BY_DEFINITION: Record<string, string> = {
+  messageEventDefinition: 'workflow:messageEndEvent',
+  timerEventDefinition: 'workflow:timerEndEvent',
+  signalEventDefinition: 'workflow:signalEndEvent',
+  errorEventDefinition: 'workflow:errorEndEvent',
+  escalationEventDefinition: 'workflow:escalationEndEvent',
+  compensateEventDefinition: 'workflow:compensationEndEvent',
+  multipleEventDefinition: 'workflow:multipleEndEvent',
+  parallelMultipleEventDefinition: 'workflow:parallelMultipleEndEvent',
+  cancelEventDefinition: 'workflow:cancelEndEvent',
+  terminateEventDefinition: 'workflow:terminateEndEvent',
+};
+
+export const INTERMEDIATE_EVENT_BY_DEFINITION: Record<string, string> = {
+  messageEventDefinition: 'workflow:messageIntermediateEvent',
+  timerEventDefinition: 'workflow:timerIntermediateEvent',
+  signalEventDefinition: 'workflow:signalIntermediateEvent',
+  conditionalEventDefinition: 'workflow:conditionalIntermediateEvent',
+  escalationEventDefinition: 'workflow:escalationIntermediateEvent',
+  compensateEventDefinition: 'workflow:compensationIntermediateEvent',
+  linkEventDefinition: 'workflow:linkIntermediateEvent',
+  multipleEventDefinition: 'workflow:multipleIntermediateEvent',
+  parallelMultipleEventDefinition: 'workflow:parallelMultipleIntermediateEvent',
+};
+
+export const TYPE_BY_TAG: Record<string, string> = {
+  boundaryEvent: 'workflow:boundaryEvent',
+  task: 'workflow:task',
+  userTask: 'workflow:userTask',
+  serviceTask: 'workflow:serviceTask',
+  manualTask: 'workflow:manualTask',
+  scriptTask: 'workflow:scriptTask',
+  businessRuleTask: 'workflow:businessRuleTask',
+  sendTask: 'workflow:sendTask',
+  receiveTask: 'workflow:receiveTask',
+  subProcess: 'workflow:subProcess',
+  adHocSubProcess: 'workflow:adHocSubProcess',
+  callActivity: 'workflow:callActivity',
+  transaction: 'workflow:transaction',
+  exclusiveGateway: 'workflow:exclusiveGateway',
+  parallelGateway: 'workflow:parallelGateway',
+  inclusiveGateway: 'workflow:inclusiveGateway',
+  eventBasedGateway: 'workflow:eventBasedGateway',
+  complexGateway: 'workflow:complexGateway',
+  dataObjectReference: 'workflow:dataObject',
+  dataObject: 'workflow:dataObject',
+  dataInput: 'workflow:dataInput',
+  dataOutput: 'workflow:dataOutput',
+  dataStoreReference: 'workflow:dataStore',
+  participant: 'workflow:pool',
+  lane: 'workflow:lane',
+  group: 'workflow:group',
+  textAnnotation: 'workflow:textAnnotation',
+};

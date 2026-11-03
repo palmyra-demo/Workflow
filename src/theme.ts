@@ -1,11 +1,19 @@
 import { createTheme, MantineColorsTuple } from '@mantine/core';
 
 const bpmn: MantineColorsTuple = [
-  '#eef4ff', '#d9e6ff', '#b3ccff', '#8bb1ff', '#6a9bff',
-  '#4d90ff', '#3061c4', '#264f9f', '#1d3e7c', '#142c59',
+  '#eef4ff',
+  '#d9e6ff',
+  '#b3ccff',
+  '#8bb1ff',
+  '#6a9bff',
+  '#4d90ff',
+  '#3061c4',
+  '#264f9f',
+  '#1d3e7c',
+  '#142c59',
 ];
 
-export const theme = createTheme({
+export const workflowTheme = createTheme({
   primaryColor: 'bpmn',
   colors: { bpmn },
   primaryShade: 6,

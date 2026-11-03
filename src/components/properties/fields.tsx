@@ -13,7 +13,12 @@ export function useCommittedValue(value: string, onCommit: (value: string) => vo
   commitRef.current = onCommit;
   valueRef.current = value;
 
-  useEffect(() => { if (!pending.current) { setLocal(value); latest.current = value; } }, [value]);
+  useEffect(() => {
+    if (!pending.current) {
+      setLocal(value);
+      latest.current = value;
+    }
+  }, [value]);
 
   const flush = () => {
     clearTimeout(timer.current);
@@ -47,9 +52,27 @@ interface EntryProps {
   type?: 'text' | 'number';
 }
 
-const entryClasses = { root: 'bpp-entry', label: 'bpp-label', input: 'bpp-input', description: 'bpp-help', error: 'bpp-error' };
+const entryClasses = {
+  root: 'bpp-entry',
+  label: 'bpp-label',
+  input: 'bpp-input',
+  description: 'bpp-help',
+  error: 'bpp-error',
+};
 
-export function TextField({ label, value, onChange, placeholder, help, error, required, readOnly, autoFocus, mono, type = 'text' }: EntryProps) {
+export function TextField({
+  label,
+  value,
+  onChange,
+  placeholder,
+  help,
+  error,
+  required,
+  readOnly,
+  autoFocus,
+  mono,
+  type = 'text',
+}: EntryProps) {
   const { local, change, flush } = useCommittedValue(value, (v) => onChange?.(v));
   return (
     <TextInput
@@ -67,12 +90,25 @@ export function TextField({ label, value, onChange, placeholder, help, error, re
       placeholder={placeholder}
       onChange={(e) => change(e.currentTarget.value)}
       onBlur={flush}
-      onKeyDown={(e) => { if (e.key === 'Enter') flush(); }}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter') flush();
+      }}
     />
   );
 }
 
-export function TextAreaField({ label, value, onChange, placeholder, help, error, required, readOnly, rows = 3, mono }: EntryProps & { rows?: number }) {
+export function TextAreaField({
+  label,
+  value,
+  onChange,
+  placeholder,
+  help,
+  error,
+  required,
+  readOnly,
+  rows = 3,
+  mono,
+}: EntryProps & { rows?: number }) {
   const { local, change, flush } = useCommittedValue(value, (v) => onChange?.(v));
   return (
     <Textarea
@@ -94,11 +130,29 @@ export function TextAreaField({ label, value, onChange, placeholder, help, error
   );
 }
 
-export interface SelectOption { label: string; value: string }
+export interface SelectOption {
+  label: string;
+  value: string;
+}
 
-export function SelectField({ label, value, options, onChange, help, error, readOnly, disabled }: {
-  label: string; value: string; options: (string | SelectOption)[]; onChange?: (value: string) => void;
-  help?: string; error?: string; readOnly?: boolean; disabled?: boolean;
+export function SelectField({
+  label,
+  value,
+  options,
+  onChange,
+  help,
+  error,
+  readOnly,
+  disabled,
+}: {
+  label: string;
+  value: string;
+  options: (string | SelectOption)[];
+  onChange?: (value: string) => void;
+  help?: string;
+  error?: string;
+  readOnly?: boolean;
+  disabled?: boolean;
 }) {
   const data = options.map((o) => (typeof o === 'string' ? { label: o, value: o } : o));
   return (
@@ -113,12 +167,24 @@ export function SelectField({ label, value, options, onChange, help, error, read
       readOnly={readOnly}
       disabled={disabled}
       comboboxProps={{ withinPortal: true, zIndex: 1000, shadow: 'sm' }}
-      onChange={(v) => { if (v !== null) onChange?.(v); }}
+      onChange={(v) => {
+        if (v !== null) onChange?.(v);
+      }}
     />
   );
 }
 
-export function BooleanField({ label, value, onChange, readOnly }: { label: string; value: boolean; onChange?: (value: boolean) => void; readOnly?: boolean }) {
+export function BooleanField({
+  label,
+  value,
+  onChange,
+  readOnly,
+}: {
+  label: string;
+  value: boolean;
+  onChange?: (value: boolean) => void;
+  readOnly?: boolean;
+}) {
   return (
     <Checkbox
       classNames={{ root: 'bpp-entry bpp-check', label: 'bpp-check-label', input: 'bpp-check-input' }}

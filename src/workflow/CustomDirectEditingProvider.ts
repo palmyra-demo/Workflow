@@ -1,5 +1,10 @@
 import { isWorkflowElement } from './types';
-import { defaultConnectionLabelBounds, defaultLabelBounds, hasExternalLabel, isLabeledConnection } from './labels/labelUtils';
+import {
+  defaultConnectionLabelBounds,
+  defaultLabelBounds,
+  hasExternalLabel,
+  isLabeledConnection,
+} from './labels/labelUtils';
 import { POOL_HEADER, isLane, isPool } from './pool/poolUtils';
 
 export default class CustomDirectEditingProvider {
@@ -18,21 +23,21 @@ export default class CustomDirectEditingProvider {
       if (directEditing.isActive()) directEditing.complete();
     });
 
-    
-
     let hidden: any = null;
     eventBus.on('directEditing.activate', () => {
       const el = directEditing._active?.element;
       const target = el && (el.labelTarget ? el : (el.labels || [])[0] || el);
       if (!target) return;
       hidden = target;
-      try { 
-        canvas.addMarker(target, 'workflow-editing'); }
-       catch { /* element may be gone */ }
+      try {
+        canvas.addMarker(target, 'workflow-editing');
+      } catch {}
     });
     eventBus.on('directEditing.deactivate', () => {
       if (!hidden) return;
-      try { canvas.removeMarker(hidden, 'workflow-editing'); } catch { /* element may be gone */ }
+      try {
+        canvas.removeMarker(hidden, 'workflow-editing');
+      } catch {}
       hidden = null;
     });
 
@@ -43,8 +48,17 @@ export default class CustomDirectEditingProvider {
     });
 
     const editNew = (shape: any) => {
-      if (!shape || shape.waypoints || isLane(shape) || shape.type === 'workflow:group' || !isWorkflowElement(shape)) return;
-      try { directEditing.activate(shape); } catch { }
+      if (
+        !shape ||
+        shape.waypoints ||
+        isLane(shape) ||
+        shape.type === 'workflow:group' ||
+        !isWorkflowElement(shape)
+      )
+        return;
+      try {
+        directEditing.activate(shape);
+      } catch {}
     };
     eventBus.on('autoPlace.end', 500, (e: any) => editNew(e.shape));
     eventBus.on('create.end', 500, (e: any) => {
@@ -72,12 +86,20 @@ export default class CustomDirectEditingProvider {
       const label = (target.labels || [])[0];
       const b = label
         ? { x: label.x, y: label.y, width: label.width, height: label.height }
-        : isLabeledConnection(target) ? defaultConnectionLabelBounds(target, 'MMMMMMMMMMMMMM') : defaultLabelBounds(target, 'M');
+        : isLabeledConnection(target)
+          ? defaultConnectionLabelBounds(target, 'MMMMMMMMMMMMMM')
+          : defaultLabelBounds(target, 'M');
       return {
         text,
         bounds: this.toScreen(b),
         options: { autoResize: true },
-        style: { fontSize: `${12 * this.canvas.viewbox().scale}px`, fontFamily: 'inherit', textAlign: 'center', lineHeight: '1.17', padding: '3px' },
+        style: {
+          fontSize: `${12 * this.canvas.viewbox().scale}px`,
+          fontFamily: 'inherit',
+          textAlign: 'center',
+          lineHeight: '1.17',
+          padding: '3px',
+        },
       };
     }
     element = target;
@@ -104,9 +126,16 @@ export default class CustomDirectEditingProvider {
 
   private getHeaderBounds(element: any) {
     const { x: vx, y: vy, scale } = this.canvas.viewbox();
-    const cx = element.x + POOL_HEADER / 2, cy = element.y + element.height / 2;
-    const w = Math.max(60, element.height - 8), h = POOL_HEADER - 4;
-    return { x: (cx - w / 2 - vx) * scale, y: (cy - h / 2 - vy) * scale, width: w * scale, height: h * scale };
+    const cx = element.x + POOL_HEADER / 2,
+      cy = element.y + element.height / 2;
+    const w = Math.max(60, element.height - 8),
+      h = POOL_HEADER - 4;
+    return {
+      x: (cx - w / 2 - vx) * scale,
+      y: (cy - h / 2 - vy) * scale,
+      width: w * scale,
+      height: h * scale,
+    };
   }
 
   private toScreen(b: { x: number; y: number; width: number; height: number }) {
@@ -123,26 +152,4 @@ export default class CustomDirectEditingProvider {
       height: Math.max(20, element.height - 2 * inset),
     });
   }
-
-  // private getBounds(element: any) {
-  //   const viewbox = this.canvas.viewbox();
-  //   const zoom = viewbox.scale;
-
-  //   const isConnectionLike = !!element.waypoints;
-  //   const mid = isConnectionLike
-  //     ? getConnectionLabelPosition(element.waypoints)
-  //     : { x: element.x + element.width / 2, y: element.y + element.height / 2 };
-
-  //   const width = isConnectionLike ? 100 : element.width;
-  //   const height = isConnectionLike ? 24 : element.height;
-  //   const x = mid.x - width / 2;
-  //   const y = mid.y - height / 2;
-
-  //   return {
-  //     x: (x - viewbox.x) * zoom,
-  //     y: (y - viewbox.y) * zoom,
-  //     width: width * zoom,
-  //     height: height * zoom,
-  //   };
-  // }
 }

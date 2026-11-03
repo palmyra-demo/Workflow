@@ -1,17 +1,24 @@
 /** @type {import('tailwindcss').Config} */
 export default {
-  content: ['./index.html', './src/**/*.{ts,tsx}'],
-  // The editor already has its own base styles (diagram-js, palette, context pad);
-  // only Tailwind's utilities are used, so its global reset stays off.
+  content: ['./index.html', './src/**/*.{ts,tsx}', './demo/**/*.{ts,tsx}'],
   corePlugins: { preflight: false },
   theme: {
     extend: {
       colors: { accent: '#3061c4' },
       keyframes: {
-        'fade-in': { from: { opacity: '0', transform: 'translateY(4px)' }, to: { opacity: '1', transform: 'none' } },
-        'modal-in': { from: { opacity: '0', transform: 'translateY(8px) scale(.97)' }, to: { opacity: '1', transform: 'none' } },
+        'fade-in': {
+          from: { opacity: '0', transform: 'translateY(4px)' },
+          to: { opacity: '1', transform: 'none' },
+        },
+        'modal-in': {
+          from: { opacity: '0', transform: 'translateY(8px) scale(.97)' },
+          to: { opacity: '1', transform: 'none' },
+        },
         'backdrop-in': { from: { opacity: '0' }, to: { opacity: '1' } },
-        'slide-up': { from: { opacity: '0', transform: 'translateY(16px)' }, to: { opacity: '1', transform: 'none' } },
+        'slide-up': {
+          from: { opacity: '0', transform: 'translateY(16px)' },
+          to: { opacity: '1', transform: 'none' },
+        },
       },
       animation: {
         'fade-in': 'fade-in .18s ease-out',

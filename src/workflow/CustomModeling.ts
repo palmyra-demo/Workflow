@@ -32,8 +32,6 @@ export default class CustomModeling extends (BaseModeling as any) {
     });
   }
 
-
-  /** collapse an expanded sub-process / expand a collapsed one (one undo step) */
   toggleSubProcess(shape: any): void {
     this._commandStack.execute('workflow.toggleCollapse', { shape });
   }
@@ -52,7 +50,10 @@ export default class CustomModeling extends (BaseModeling as any) {
       const chain = new Set<any>();
       for (let c = source?.parent; c; c = c.parent) chain.add(c);
       for (let c = target?.parent; c; c = c.parent) {
-        if (chain.has(c) && (isPool(c) || isSubProcessLike(c))) { parent = c; break; }
+        if (chain.has(c) && (isPool(c) || isSubProcessLike(c))) {
+          parent = c;
+          break;
+        }
       }
     }
     return this.createConnection(source, target, attrs || {}, parent, hints);

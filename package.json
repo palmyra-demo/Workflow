@@ -1,32 +1,60 @@
 {
   "name": "workflow-editor",
-  "private": true,
   "version": "0.1.0",
+  "description": "React workflow (BPMN-style) editor with versioning, built on diagram-js",
   "type": "module",
-  "description": "workflow editor built",
+  "main": "./dist/workflow-editor.cjs",
+  "module": "./dist/workflow-editor.js",
+  "types": "./dist/types/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/types/index.d.ts",
+      "import": "./dist/workflow-editor.js",
+      "require": "./dist/workflow-editor.cjs"
+    },
+    "./style.css": "./dist/style.css"
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "sideEffects": [
+    "**/*.css"
+  ],
   "scripts": {
     "dev": "vite",
-    "build": "tsc --noEmit && vite build",
+    "build": "npm run clean && vite build --config vite.lib.config.ts && tsc -p tsconfig.build.json",
+    "build:demo": "tsc --noEmit && vite build",
     "preview": "vite preview",
-    "typecheck": "tsc --noEmit"
+    "clean": "node -e \"require('fs').rmSync('dist',{recursive:true,force:true})\"",
+    "typecheck": "tsc --noEmit",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "prepack": "npm run build"
   },
   "dependencies": {
-    "@mantine/core": "^9.7.2",
-    "@mantine/hooks": "^9.7.2",
     "diagram-js": "^14.11.3",
     "diagram-js-direct-editing": "^3.2.0",
     "min-dash": "^4.2.1",
-    "react": "^19.2.0",
-    "react-dom": "^19.2.0",
-    "react-router-dom": "^7.18.4",
     "tiny-svg": "^3.1.2"
   },
+  "peerDependencies": {
+    "@mantine/core": "^9.7.2",
+    "@mantine/hooks": "^9.7.2",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0"
+  },
   "devDependencies": {
+    "@mantine/core": "^9.7.2",
+    "@mantine/hooks": "^9.7.2",
     "@types/react": "^19.2.0",
     "@types/react-dom": "^19.2.0",
     "@vitejs/plugin-react": "^4.3.4",
     "autoprefixer": "^10.6.1",
     "postcss": "^8.5.29",
+    "prettier": "^3.3.3",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
     "tailwindcss": "^3.4.17",
     "typescript": "^5.6.3",
     "vite": "^5.4.11"

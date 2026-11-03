@@ -5,25 +5,29 @@ export const LABEL_LINE_HEIGHT = 14;
 const CHAR_WIDTH = 6.3;
 const LABEL_GAP = 4;
 
-/** Sequence / message flows carry a draggable label next to their path. */
 export const isLabeledConnection = (element: any): boolean =>
-  !!element && !!element.waypoints && (element.type === 'workflow:sequenceFlow' || element.type === 'workflow:messageFlow');
+  !!element &&
+  !!element.waypoints &&
+  (element.type === 'workflow:sequenceFlow' || element.type === 'workflow:messageFlow');
 
-/**
- * Events, gateways and data elements carry their name in a separate label below the shape,
- * sequence / message flows next to their path (like bpmn.io).
- */
 export const hasExternalLabel = (element: any): boolean =>
-  !!element && !element.labelTarget && !!element.type &&
-  (isLabeledConnection(element) || (!element.waypoints && ['event', 'gateway', 'data'].includes(categoryOf(element.type as WorkflowType))));
+  !!element &&
+  !element.labelTarget &&
+  !!element.type &&
+  (isLabeledConnection(element) ||
+    (!element.waypoints && ['event', 'gateway', 'data'].includes(categoryOf(element.type as WorkflowType))));
 
-/** Greedy word wrap with ellipsis; `charWidth` is the average glyph width in px. */
 export function wrapText(text: string, maxWidth: number, charWidth: number, maxLines: number): string[] {
   const perLine = Math.max(3, Math.floor(maxWidth / charWidth));
   const words = text.split(/\s+/).filter(Boolean);
   const lines: string[] = [];
   let current = '';
-  const push = () => { if (current) { lines.push(current); current = ''; } };
+  const push = () => {
+    if (current) {
+      lines.push(current);
+      current = '';
+    }
+  };
   for (let word of words) {
     while (word.length > perLine) {
       push();
@@ -32,7 +36,10 @@ export function wrapText(text: string, maxWidth: number, charWidth: number, maxL
     }
     if (!current) current = word;
     else if ((current + ' ' + word).length <= perLine) current += ' ' + word;
-    else { push(); current = word; }
+    else {
+      push();
+      current = word;
+    }
   }
   push();
   if (lines.length > maxLines) {
@@ -46,9 +53,9 @@ export function wrapText(text: string, maxWidth: number, charWidth: number, maxL
 
 export const labelLines = (name: string, width = LABEL_WIDTH) => wrapText(name, width - 6, CHAR_WIDTH, 12);
 
-export const labelHeight = (name: string, width = LABEL_WIDTH) => Math.max(20, labelLines(name, width).length * LABEL_LINE_HEIGHT + 6);
+export const labelHeight = (name: string, width = LABEL_WIDTH) =>
+  Math.max(20, labelLines(name, width).length * LABEL_LINE_HEIGHT + 6);
 
-/** Centred below the element. */
 export function defaultLabelBounds(element: any, name: string) {
   const width = LABEL_WIDTH;
   return {
@@ -59,18 +66,22 @@ export function defaultLabelBounds(element: any, name: string) {
   };
 }
 
-
-/** Anchor of a connection label: middle of the path plus the segment orientation. */
 export function connectionLabelAnchor(waypoints: Array<{ x: number; y: number }>) {
   let total = 0;
-  for (let i = 1; i < waypoints.length; i++) total += Math.hypot(waypoints[i].x - waypoints[i - 1].x, waypoints[i].y - waypoints[i - 1].y);
+  for (let i = 1; i < waypoints.length; i++)
+    total += Math.hypot(waypoints[i].x - waypoints[i - 1].x, waypoints[i].y - waypoints[i - 1].y);
   let acc = 0;
   for (let i = 1; i < waypoints.length; i++) {
-    const a = waypoints[i - 1], b = waypoints[i];
+    const a = waypoints[i - 1],
+      b = waypoints[i];
     const seg = Math.hypot(b.x - a.x, b.y - a.y);
     if (acc + seg >= total / 2) {
       const t = seg === 0 ? 0 : (total / 2 - acc) / seg;
-      return { x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t, horizontal: Math.abs(b.x - a.x) >= Math.abs(b.y - a.y) };
+      return {
+        x: a.x + (b.x - a.x) * t,
+        y: a.y + (b.y - a.y) * t,
+        horizontal: Math.abs(b.x - a.x) >= Math.abs(b.y - a.y),
+      };
     }
     acc += seg;
   }
@@ -78,7 +89,6 @@ export function connectionLabelAnchor(waypoints: Array<{ x: number; y: number }>
   return { x: p.x, y: p.y, horizontal: true };
 }
 
-/** Width follows the text (up to LABEL_WIDTH), so short flow names stay close to the line. */
 export function connectionLabelSize(name: string) {
   const lines = labelLines(name);
   const longest = Math.max(...lines.map((l) => l.length), 1);
@@ -86,7 +96,6 @@ export function connectionLabelSize(name: string) {
   return { width, height: labelHeight(name, width) };
 }
 
-/** Above a horizontal segment, right of a vertical one - never on top of the line. */
 export function defaultConnectionLabelBounds(connection: any, name: string) {
   const a = connectionLabelAnchor(connection.waypoints);
   const { width, height } = connectionLabelSize(name);
