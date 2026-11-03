@@ -241,7 +241,7 @@ export default function VersionHistoryPage({
       )}
 
       {tab === 'versions' ? (
-        <div className="grid min-h-0 flex-1 grid-cols-1 lg:grid-cols-[340px_minmax(0,1fr)]">
+        <div className="grid min-h-0 flex-1 sm:grid-cols-1 grid-cols-[340px_minmax(0,1fr)]">
           <VersionList
             entries={entries}
             selectedId={activeSelectedId}
