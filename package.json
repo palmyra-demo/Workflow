@@ -1,5 +1,5 @@
 {
-  "name": "workflow-editor",
+  "name": "@palmyra-demo/workflow",
   "version": "0.1.0",
   "description": "React workflow (BPMN-style) editor with versioning, built on diagram-js",
   "type": "module",
@@ -30,7 +30,7 @@
     "typecheck": "tsc --noEmit",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "prepack": "npm run build"
+    "prepare": "npm run build"
   },
   "dependencies": {
     "diagram-js": "^14.11.3",
@@ -58,5 +58,12 @@
     "tailwindcss": "^3.4.17",
     "typescript": "^5.6.3",
     "vite": "^5.4.11"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/palmyra-demo/Workflow.git"
+  },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com"
   }
 }

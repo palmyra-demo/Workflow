@@ -184,7 +184,7 @@
   gap: 2px;
 }
 
-.djs-context-pad .group+.group {
+.djs-context-pad .group + .group {
   padding-top: 3px;
   border-top: 1px solid #eef2f7;
 }
@@ -330,7 +330,7 @@
   padding: 5px 10px 9px;
 }
 
-.workflow-element-browser__group+.workflow-element-browser__group {
+.workflow-element-browser__group + .workflow-element-browser__group {
   margin-top: 5px;
   padding-top: 0;
   border-top: 0;
@@ -401,7 +401,7 @@
   height: 18px;
 }
 
-.workflow-element-browser__item>span:last-child {
+.workflow-element-browser__item > span:last-child {
   overflow-wrap: anywhere;
 }
 
